@@ -1,0 +1,34 @@
+server:
+  address: ${SERVER_ADDRESS:0.0.0.0}
+  port: ${SERVER_PORT:9183}
+
+spring:
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-store: true
+          no-cache: true
+          must-revalidate: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 160MB
+
+app:
+  webhook-test-url: "http://172.17.112.95:9181/webhook-test/mrs-chat"
+  webhook-service-url: "http://172.17.112.95:9181/webhook/mrs-chat"
+  rag-webhook-test-url: "http://172.17.112.95:9181/webhook-test/n8nragv1"
+  rag-webhook-service-url: "http://172.17.112.95:9181/webhook/n8nragv1"
+  rag-chatbot-test-url: "http://172.17.112.95:9181/webhook-test/rag-chatbot"
+  rag-chatbot-service-url: "http://172.17.112.95:9181/webhook/rag-chatbot"
+
+mrs:
+  chat:
+    models:
+      - label: "google-gemma4-E4B"
+        value: "google-gemma4-E4B"
+      - label: "Qwen3-30B-A3B"
+        value: "Qwen3-30B-A3B"
+      - label: "Qwen3-VL-8B-Ins"
+        value: "Qwen3-VL-8B"

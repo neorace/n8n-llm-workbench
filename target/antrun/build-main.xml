@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <delete failonerror="false" quiet="true" dir="D:\workspace\springboot\mrs-chat-with-rag\backend\target/classes/static" />
+  </target>
+</project>
