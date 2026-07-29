@@ -33,3 +33,4 @@ app:
         value: Qwen3-30B-A3B
       - label: Qwen3-VL-8B-Ins
         value: Qwen3-VL-8B
+
