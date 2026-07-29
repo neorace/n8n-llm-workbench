@@ -16,21 +16,21 @@ server:
   port: ${SERVER_PORT:9183}
 
 app:
-  webhook-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/mrs-chat"
-  webhook-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook/mrs-chat"
-  rag-webhook-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/n8nragv1"
-  rag-webhook-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook/n8nragv1"
-  rag-chatbot-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/rag-chatbot"
-  rag-chatbot-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook/rag-chatbot"
-  text-extractor-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/text-extrator"
-  text-extractor-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/text-extrator"
-
-  chat:
-    models:
-      - label: google-gemma4-E4B
-        value: google-gemma4-E4B
-      - label: Qwen3-30B-A3B
-        value: Qwen3-30B-A3B
-      - label: Qwen3-VL-8B-Ins
-        value: Qwen3-VL-8B
+  webhook-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/mrs-chat"  
+  webhook-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook/mrs-chat"  
+  rag-webhook-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/n8nragv1"  
+  rag-webhook-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook/n8nragv1"  
+  rag-chatbot-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/rag-chatbot"  
+  rag-chatbot-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook/rag-chatbot"  
+  text-extractor-test-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/text-extrator"  
+  text-extractor-service-url: "http://{N8N-HOST}:{N8N-PORT}/webhook-test/text-extrator"  
+  
+  chat:  
+    models:  
+      - label: google-gemma4-E4B  
+        value: google-gemma4-E4B  
+      - label: Qwen3-30B-A3B  
+        value: Qwen3-30B-A3B  
+      - label: Qwen3-VL-8B-Ins  
+        value: Qwen3-VL-8B  
 
