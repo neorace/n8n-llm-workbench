@@ -88,4 +88,25 @@ public class RagController {
         String reply = ragWebhookService.deleteVector(request.tableName(), request.mode());
         return ResponseEntity.ok(Map.of("reply", reply));
     }
+
+    @PostMapping(value = "/text/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> extractText(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "mode", required = false) String mode,
+            @RequestParam(value = "docType", required = false) String docType
+    ) throws IOException {
+        String resolvedMode = mode == null || mode.isBlank() ? "test" : mode.trim();
+        String resolvedDocType = docType == null || docType.isBlank() ? "auto" : docType.trim();
+        String filename = file == null || file.getOriginalFilename() == null
+                ? "(unknown)"
+                : file.getOriginalFilename();
+        log.info(
+                "Received RAG text extract: filename={}, docType={}, mode={}",
+                filename,
+                resolvedDocType,
+                resolvedMode
+        );
+        String reply = ragWebhookService.extractText(file, resolvedMode, resolvedDocType);
+        return ResponseEntity.ok(Map.of("reply", reply));
+    }
 }

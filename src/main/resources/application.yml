@@ -22,8 +22,9 @@ app:
   rag-webhook-service-url: "http://172.17.112.95:9181/webhook/n8nragv1"
   rag-chatbot-test-url: "http://172.17.112.95:9181/webhook-test/rag-chatbot"
   rag-chatbot-service-url: "http://172.17.112.95:9181/webhook/rag-chatbot"
+  text-extractor-test-url: "http://172.17.112.95:9181/webhook-test/text-extrator"
+  text-extractor-service-url: "http://172.17.112.95:9181/webhook-test/text-extrator"
 
-mrs:
   chat:
     models:
       - label: "google-gemma4-E4B"

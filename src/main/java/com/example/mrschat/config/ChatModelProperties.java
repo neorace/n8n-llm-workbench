@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 
-@ConfigurationProperties(prefix = "mrs.chat")
+@ConfigurationProperties(prefix = "app.chat")
 public class ChatModelProperties {
 
     private List<ModelOption> models = new ArrayList<>();

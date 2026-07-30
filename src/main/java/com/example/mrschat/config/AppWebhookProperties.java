@@ -11,6 +11,8 @@ public class AppWebhookProperties {
     private String ragWebhookServiceUrl = "";
     private String ragChatbotTestUrl = "";
     private String ragChatbotServiceUrl = "";
+    private String textExtractorTestUrl = "";
+    private String textExtractorServiceUrl = "";
 
     public String getWebhookTestUrl() {
         return webhookTestUrl;
@@ -58,5 +60,21 @@ public class AppWebhookProperties {
 
     public void setRagChatbotServiceUrl(String ragChatbotServiceUrl) {
         this.ragChatbotServiceUrl = ragChatbotServiceUrl == null ? "" : ragChatbotServiceUrl;
+    }
+
+    public String getTextExtractorTestUrl() {
+        return textExtractorTestUrl;
+    }
+
+    public void setTextExtractorTestUrl(String textExtractorTestUrl) {
+        this.textExtractorTestUrl = textExtractorTestUrl == null ? "" : textExtractorTestUrl;
+    }
+
+    public String getTextExtractorServiceUrl() {
+        return textExtractorServiceUrl;
+    }
+
+    public void setTextExtractorServiceUrl(String textExtractorServiceUrl) {
+        this.textExtractorServiceUrl = textExtractorServiceUrl == null ? "" : textExtractorServiceUrl;
     }
 }

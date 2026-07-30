@@ -69,7 +69,7 @@ body {
 .layout {
   height: 100vh;
   display: grid;
-  grid-template-columns: 286px 1fr 378px;
+  grid-template-columns: 299px 1fr 378px;
 }
 
 .left-panel {
@@ -82,8 +82,20 @@ body {
   overflow-y: auto;
 }
 
+.left-panel-title-block {
+  box-sizing: border-box;
+  /* Align with chat-area top: right-panel padding-top(8) + chat-header(36) + margin(4) + gap(6) */
+  height: 54px;
+  margin: -20px 0 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #1f2937;
+}
+
 .left-panel h2 {
-  margin-top: 0;
+  margin: 0;
   font-size: 18px;
   text-align: center;
 }
@@ -401,7 +413,7 @@ body {
 
 .rag-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 6px;
   margin: 10px 0 0;
 }
@@ -447,7 +459,7 @@ body {
   cursor: pointer;
   font: inherit;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -650,10 +662,40 @@ body {
   font-size: 14px;
 }
 
-.right-panel > h2 {
+.chat-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
   margin: 0 0 4px;
+}
+
+.chat-header .app-brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: 42%;
+}
+
+.chat-header .app-brand-logo {
+  display: block;
+  height: 32px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.chat-header h2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0;
   font-size: 18px;
   text-align: center;
+  pointer-events: none;
 }
 
 .chat-area {

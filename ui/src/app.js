@@ -410,10 +410,11 @@ const DEFAULT_MODEL_OPTIONS = [
 ];
 const SESSION_KEY_PREFIX = "mrs-chat-sessionid";
 const CHAT_MODES = [
-  { value: "test", label: "테스트" },
-  { value: "service", label: "서비스" }
+  { value: "test", label: "Test URL" },
+  { value: "service", label: "Production URL" }
 ];
-const RAG_FILE_ACCEPT = ".txt,.text,.pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff";
+const RAG_FILE_ACCEPT =
+  ".txt,.text,.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff";
 const RAG_MAX_FILES = 3;
 const RAG_DEFAULT_DOC_TYPE = "auto";
 const RAG_TABLE_NAME_PREFIX = "tbl_vec_";
@@ -461,6 +462,14 @@ function isRagAllowedFile(file) {
     return true;
   }
   if (mime === "application/pdf" || name.endsWith(".pdf")) {
+    return true;
+  }
+  if (
+    name.endsWith(".doc") ||
+    name.endsWith(".docx") ||
+    mime === "application/msword" ||
+    mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
     return true;
   }
   return mime.startsWith("image/");
@@ -975,6 +984,7 @@ function App() {
   const [mode, setMode] = useState(CHAT_MODES[1].value);
   const [promptPreset, setPromptPreset] = useState(SYSTEM_PROMPTS[0].value);
   const [systemMessage, setSystemMessage] = useState(SYSTEM_PROMPTS[0].prompt);
+  const [ragSystemMessage, setRagSystemMessage] = useState(RAG_SYSTEM_MESSAGE);
   const [messagesByKey, setMessagesByKey] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -1059,7 +1069,7 @@ function App() {
   const activePreset = SYSTEM_PROMPTS.find((item) => item.value === promptPreset);
   const chatTitle = ragModeEnabled ? RAG_CHAT_TITLE : activePreset?.title ?? "Conversation(user message)";
   const effectivePreset = ragModeEnabled ? RAG_CHAT_PRESET : promptPreset;
-  const effectiveSystemMessage = ragModeEnabled ? RAG_SYSTEM_MESSAGE : systemMessage;
+  const effectiveSystemMessage = ragModeEnabled ? ragSystemMessage : systemMessage;
 
   const updateMessages = (targetModel, targetPreset, updater, ragMode = ragModeEnabled) => {
     const key = makeChatKey(targetModel, targetPreset, ragMode);
@@ -1302,6 +1312,57 @@ function App() {
     }
   };
 
+  const extractRagText = async (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    const files = ragFilesRef.current.filter((file) => file instanceof File);
+    if (files.length === 0) {
+      appendRagMessageToChat("파일을 선택해 주세요.");
+      return;
+    }
+    if (files.length > 1) {
+      appendRagMessageToChat("Text추출은 파일을 1개만 선택해 주세요.");
+      return;
+    }
+    if (ragBusy) {
+      return;
+    }
+
+    const file = files[0];
+    const docType = normalizeRagDocType(ragDocType);
+    setRagBusy(true);
+    const requestStartedAt = performance.now();
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("mode", mode);
+      formData.append("docType", docType);
+      const response = await fetchWithTimeout(
+        "/api/rag/text/extract",
+        {
+          method: "POST",
+          body: formData
+        },
+        30 * 60 * 1000
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Text추출 요청 실패");
+      }
+      const message = formatRagActionResponse(
+        data.reply,
+        "Text추출 요청이 전송되었습니다."
+      );
+      appendRagMessageToChat(message, performance.now() - requestStartedAt);
+    } catch (e) {
+      const message = e.message || "Text추출에 실패했습니다.";
+      appendRagMessageToChat(message, performance.now() - requestStartedAt);
+    } finally {
+      setRagBusy(false);
+    }
+  };
+
   useEffect(() => {
     const chatArea = chatAreaRef.current;
     let cancelled = false;
@@ -1399,8 +1460,10 @@ function App() {
     <${React.Fragment}>
     <div className="layout">
       <aside className="left-panel">
-        <h2>Execution Settings</h2>
-        <label htmlFor="mode-toggle">n8n mode</label>
+        <div className="left-panel-title-block">
+          <h2>Execution Settings</h2>
+        </div>
+        <label htmlFor="mode-toggle">n8n Webhook URLs</label>
         <button
           id="mode-toggle"
           type="button"
@@ -1485,7 +1548,7 @@ function App() {
                         `
                       )}
                     </ul>`
-                  : html`<p className="rag-file-hint">Text / PDF / Image · 최대 ${RAG_MAX_FILES}개</p>`}
+                  : html`<p className="rag-file-hint">Text / PDF / DOC / Image · 최대 ${RAG_MAX_FILES}개</p>`}
                 <div className="rag-panel-lower">
                   <label htmlFor="rag-table-name">테이블명</label>
                   <div className="rag-table-name-field">
@@ -1533,6 +1596,14 @@ function App() {
                     >
                       벡터DB 삭제
                     </button>
+                    <button
+                      type="button"
+                      className="rag-action-button"
+                      onClick=${extractRagText}
+                      disabled=${ragFiles.length !== 1 || loading || ragBusy}
+                    >
+                      Text추출
+                    </button>
                   </div>
                   <div className="rag-table-hint-box">
                     <p className="rag-table-hint-title">※ 참고 ※</p>
@@ -1544,7 +1615,18 @@ function App() {
           : null}
       </aside>
       <main className="right-panel">
-        <h2>${chatTitle}</h2>
+        <div className="chat-header">
+          <div className="app-brand">
+            <img
+              className="app-brand-logo"
+              src="/llm-workbench-logo.png?v=20260723-2"
+              alt="LLM Workbench"
+              width="220"
+              height="36"
+            />
+          </div>
+          <h2>${chatTitle}</h2>
+        </div>
         <div className="chat-area" ref=${chatAreaRef}>
           ${messages.length === 0 && !loading
             ? html`
@@ -1633,7 +1715,14 @@ function App() {
             id="system-message"
             ref=${systemTextareaRef}
             value=${effectiveSystemMessage}
-            onChange=${(e) => setSystemMessage(e.target.value)}
+            onChange=${(e) => {
+              const next = e.target.value;
+              if (ragModeEnabled) {
+                setRagSystemMessage(next);
+              } else {
+                setSystemMessage(next);
+              }
+            }}
             placeholder="시스템 메시지를 입력하세요"
             spellCheck=${false}
             autocapitalize="off"
@@ -1642,8 +1731,7 @@ function App() {
             data-gramm="false"
             data-gramm_editor="false"
             data-enable-grammarly="false"
-            readOnly=${ragModeEnabled}
-            disabled=${loading || ragModeEnabled}
+            disabled=${loading}
             rows="12"
           />
         </div>

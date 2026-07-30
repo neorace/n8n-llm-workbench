@@ -34,11 +34,15 @@ public class RagWebhookService {
     private final java.net.http.HttpClient httpClient;
     private final String webhookTestUrl;
     private final String webhookServiceUrl;
+    private final String textExtractorTestUrl;
+    private final String textExtractorServiceUrl;
 
     public RagWebhookService(
             RestTemplate restTemplate,
             @Value("${app.rag-webhook-test-url}") String webhookTestUrl,
-            @Value("${app.rag-webhook-service-url}") String webhookServiceUrl
+            @Value("${app.rag-webhook-service-url}") String webhookServiceUrl,
+            @Value("${app.text-extractor-test-url}") String textExtractorTestUrl,
+            @Value("${app.text-extractor-service-url}") String textExtractorServiceUrl
     ) {
         this.restTemplate = Objects.requireNonNull(restTemplate, "restTemplate must not be null");
         this.httpClient = java.net.http.HttpClient.newBuilder()
@@ -47,6 +51,8 @@ public class RagWebhookService {
                 .build();
         this.webhookTestUrl = Objects.requireNonNull(webhookTestUrl, "webhookTestUrl must not be null");
         this.webhookServiceUrl = Objects.requireNonNull(webhookServiceUrl, "webhookServiceUrl must not be null");
+        this.textExtractorTestUrl = Objects.requireNonNull(textExtractorTestUrl, "textExtractorTestUrl must not be null");
+        this.textExtractorServiceUrl = Objects.requireNonNull(textExtractorServiceUrl, "textExtractorServiceUrl must not be null");
     }
 
     @SuppressWarnings("null")
@@ -106,6 +112,54 @@ public class RagWebhookService {
         Map<String, Object> payload = buildDeleteBodyPayload(tableName.trim(), normalizedMode);
         String targetUrl = resolveWebhookUrl(normalizedMode);
         return postJson(targetUrl, payload, normalizedMode);
+    }
+
+    @SuppressWarnings("null")
+    public String extractText(MultipartFile file, String mode, String docType) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Exactly one file is required");
+        }
+
+        String normalizedMode = normalizeMode(mode);
+        String normalizedDocType = docType == null || docType.isBlank() ? "auto" : docType.trim();
+        String filename = file.getOriginalFilename() == null ? "upload" : file.getOriginalFilename();
+        String contentType = file.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+        String fileType = resolveFileType(filename, contentType);
+
+        String boundary = "----MrsChatRagBoundary" + UUID.randomUUID().toString().replace("-", "");
+        ByteArrayOutputStream multipartBody = new ByteArrayOutputStream();
+        writeTextPart(multipartBody, boundary, "action", "extract");
+        writeTextPart(multipartBody, boundary, "docType", normalizedDocType);
+        writeTextPart(multipartBody, boundary, "fileName", filename);
+        writeTextPart(multipartBody, boundary, "fileType", fileType);
+        writeFilePart(multipartBody, boundary, "file", filename, contentType, file.getBytes());
+        writeString(multipartBody, "--" + boundary + "--\r\n");
+
+        String targetUrl = resolveTextExtractorUrl(normalizedMode);
+        log.info(
+                "RAG text extract: fileName={}, fileType={}, docType={}, mode={}, target={}",
+                filename,
+                fileType,
+                normalizedDocType,
+                normalizedMode,
+                targetUrl
+        );
+        return postMultipart(targetUrl, boundary, multipartBody.toByteArray(), normalizedMode);
+    }
+
+    private String resolveFileType(String filename, String contentType) {
+        String name = filename == null ? "" : filename.trim();
+        int lastDot = name.lastIndexOf('.');
+        if (lastDot >= 0 && lastDot < name.length() - 1) {
+            return name.substring(lastDot + 1).toLowerCase();
+        }
+        if (contentType != null && !contentType.isBlank()) {
+            return contentType.trim().toLowerCase();
+        }
+        return "unknown";
     }
 
     private Map<String, Object> buildDeleteBodyPayload(String tableName, String mode) {
@@ -201,6 +255,10 @@ public class RagWebhookService {
 
     private String resolveWebhookUrl(String mode) {
         return isServiceMode(mode) ? webhookServiceUrl : webhookTestUrl;
+    }
+
+    private String resolveTextExtractorUrl(String mode) {
+        return isServiceMode(mode) ? textExtractorServiceUrl : textExtractorTestUrl;
     }
 
     private String normalizeMode(String mode) {
