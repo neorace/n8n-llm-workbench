@@ -35,8 +35,10 @@ app:
         value: Qwen3-VL-8B  
 
             
+### LLM Workbench UI
+> RAG 실행 설정 → 검색 결과 응답 → 시스템 프롬프트 프리셋을 한 화면에서 확인할 수 있는 워크벤치 화면입니다.
 
-<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/48da3110-aa6e-4575-bff5-94b876298679" />
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/6da65394-7c3a-4978-bfe7-d7c553b12cf9" />
 
 <img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/cf082068-05de-4a13-bbf2-dde2db27835f" />
 
