@@ -37,12 +37,12 @@ app:
             
 ### LLM Workbench UI
 > RAG 실행 설정 → 검색 결과 응답 → n8n Code Asistant → 시스템 프롬프트 프리셋을 한 화면에서 확인할 수 있는 워크벤치 화면입니다.
-
-<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/6da65394-7c3a-4978-bfe7-d7c553b12cf9" />
-
-<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/cf082068-05de-4a13-bbf2-dde2db27835f" />
-
-<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/d8037ae5-b815-46b8-84b3-208bac4b917e" />
+>RAG 
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/e2486a49-df1e-4b2c-9682-b38cf2e782c7" />
+>n8n Code Asistant
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/63674d85-1c9d-46e9-af30-ff4f0264f119" />
+> system prompt Asistant
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/a07f3b54-0f4d-4dfb-b34b-f7e57bc5f00c" />
 
 
 
