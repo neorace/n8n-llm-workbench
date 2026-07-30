@@ -36,5 +36,13 @@ app:
 
             
 
-<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/0583c19e-3d7c-40b0-aba9-1dd7a2e0fdff" />
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/48da3110-aa6e-4575-bff5-94b876298679" />
+
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/cf082068-05de-4a13-bbf2-dde2db27835f" />
+
+<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/d8037ae5-b815-46b8-84b3-208bac4b917e" />
+
+
+
+
 
