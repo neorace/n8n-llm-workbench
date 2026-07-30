@@ -39,7 +39,7 @@ app:
 > RAG 실행 설정 → 검색 결과 응답 → n8n Code Asistant → 시스템 프롬프트 프리셋을 한 화면에서 확인할 수 있는 워크벤치 화면입니다.
 
 RAG chatbot
-<img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/e2486a49-df1e-4b2c-9682-b38cf2e782c7" />  
+<img width="1529" height="979" alt="628836124-e2486a49-df1e-4b2c-9682-b38cf2e782c7" src="https://github.com/user-attachments/assets/2b840d97-259e-4451-b1e6-8b741496e731" />
 n8n Code Asistant  
 <img width="1529" height="979" alt="image" src="https://github.com/user-attachments/assets/63674d85-1c9d-46e9-af30-ff4f0264f119" />  
 system prompt Asistant  
