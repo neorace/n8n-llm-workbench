@@ -34,3 +34,7 @@ app:
       - label: Qwen3-VL-8B-Ins  
         value: Qwen3-VL-8B  
 
+            
+
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/0583c19e-3d7c-40b0-aba9-1dd7a2e0fdff" />
+
