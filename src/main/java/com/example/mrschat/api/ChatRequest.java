@@ -10,6 +10,7 @@ public record ChatRequest(
         String promptPreset,
         String systemMessage,
         Boolean ragMode,
-        String tableName
+        String tableName,
+        Double temperature
 ) {
 }

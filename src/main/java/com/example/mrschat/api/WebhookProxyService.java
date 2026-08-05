@@ -45,7 +45,7 @@ public class WebhookProxyService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, String> payload = new LinkedHashMap<>();
+        Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("model", request.model());
         payload.put("message", request.message());
         payload.put("sessionid", request.sessionid());
@@ -54,8 +54,12 @@ public class WebhookProxyService {
         payload.put("systemMessage", request.systemMessage() == null ? "" : request.systemMessage());
         payload.put("tableName", request.tableName() == null ? "" : request.tableName());
 
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(payload, headers);
         boolean ragMode = isRagChat(request);
+        if (ragMode && request.temperature() != null) {
+            payload.put("temperature", request.temperature());
+        }
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
         boolean serviceMode = "service".equalsIgnoreCase(request.mode());
         String targetUrl;
         if (ragMode) {
@@ -65,12 +69,13 @@ public class WebhookProxyService {
         }
 
         log.info(
-                "Chat webhook target={} ragMode={} mode={} promptPreset={} tableName={}",
+                "Chat webhook target={} ragMode={} mode={} promptPreset={} tableName={} temperature={}",
                 targetUrl,
                 ragMode,
                 request.mode(),
                 request.promptPreset(),
-                request.tableName()
+                request.tableName(),
+                request.temperature()
         );
 
         try {

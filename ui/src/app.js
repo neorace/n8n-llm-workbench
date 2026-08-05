@@ -417,6 +417,7 @@ const RAG_FILE_ACCEPT =
   ".txt,.text,.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff";
 const RAG_MAX_FILES = 3;
 const RAG_DEFAULT_DOC_TYPE = "auto";
+const RAG_DEFAULT_TEMPERATURE = 0.2;
 const RAG_TABLE_NAME_PREFIX = "tbl_vec_";
 const RAG_TABLE_NAME_HINT =
   "벡터 테이블명은 반드시 본인만 사용하는 고유한 이름으로 지정해야 합니다. 타인과 동일한 이름을 쓰면 검색 데이터가 섞이거나 기존 데이터가 덮어씌워질 수 있으니 주의해 주세요.";
@@ -991,13 +992,15 @@ function App() {
   const [ragModeEnabled, setRagModeEnabled] = useState(false);
   const [ragFiles, setRagFiles] = useState([]);
   const [ragTableName, setRagTableName] = useState("");
+  const [ragTemperature, setRagTemperature] = useState(RAG_DEFAULT_TEMPERATURE);
   const [ragDocType, setRagDocType] = useState(RAG_DEFAULT_DOC_TYPE);
   const [ragBusy, setRagBusy] = useState(false);
   const [ragMessage, setRagMessage] = useState("");
   const [ragCreateProgress, setRagCreateProgress] = useState({
     visible: false,
     done: false,
-    elapsedMs: 0
+    elapsedMs: 0,
+    kind: "create"
   });
   const chatAreaRef = useRef(null);
   const systemTextareaRef = useRef(null);
@@ -1034,6 +1037,44 @@ function App() {
       if (ragCreateCloseTimerRef.current) {
         window.clearTimeout(ragCreateCloseTimerRef.current);
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    const brand = document.querySelector(".chat-header .app-brand");
+    if (!brand) {
+      return undefined;
+    }
+
+    const baselineDpr = window.devicePixelRatio || 1;
+    const syncLogoScale = () => {
+      const viewportScale =
+        window.visualViewport && window.visualViewport.scale
+          ? window.visualViewport.scale
+          : 1;
+      const dprScale = (window.devicePixelRatio || 1) / baselineDpr;
+      const scale = Math.max(viewportScale, dprScale);
+      if (!scale || Math.abs(scale - 1) < 0.02) {
+        brand.style.transform = "";
+        return;
+      }
+      brand.style.transform = `scale(${1 / scale})`;
+      brand.style.transformOrigin = "left center";
+    };
+
+    syncLogoScale();
+    window.addEventListener("resize", syncLogoScale);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", syncLogoScale);
+      window.visualViewport.addEventListener("scroll", syncLogoScale);
+    }
+    return () => {
+      window.removeEventListener("resize", syncLogoScale);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", syncLogoScale);
+        window.visualViewport.removeEventListener("scroll", syncLogoScale);
+      }
+      brand.style.transform = "";
     };
   }, []);
 
@@ -1219,7 +1260,7 @@ function App() {
       window.clearTimeout(ragCreateCloseTimerRef.current);
       ragCreateCloseTimerRef.current = null;
     }
-    setRagCreateProgress({ visible: true, done: false, elapsedMs: 0 });
+    setRagCreateProgress({ visible: true, done: false, elapsedMs: 0, kind: "create" });
     // Let React paint the progress modal before the network request starts.
     await new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
     try {
@@ -1262,7 +1303,7 @@ function App() {
       appendRagMessageToChat(message, performance.now() - requestStartedAt);
     } finally {
       const elapsedMs = performance.now() - requestStartedAt;
-      setRagCreateProgress({ visible: true, done: true, elapsedMs });
+      setRagCreateProgress({ visible: true, done: true, elapsedMs, kind: "create" });
       ragCreateCloseTimerRef.current = window.setTimeout(() => {
         setRagCreateProgress((prev) => ({ ...prev, visible: false }));
         ragCreateCloseTimerRef.current = null;
@@ -1333,6 +1374,13 @@ function App() {
     const docType = normalizeRagDocType(ragDocType);
     setRagBusy(true);
     const requestStartedAt = performance.now();
+    ragCreateStartedAtRef.current = requestStartedAt;
+    if (ragCreateCloseTimerRef.current) {
+      window.clearTimeout(ragCreateCloseTimerRef.current);
+      ragCreateCloseTimerRef.current = null;
+    }
+    setRagCreateProgress({ visible: true, done: false, elapsedMs: 0, kind: "extract" });
+    await new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -1359,6 +1407,12 @@ function App() {
       const message = e.message || "Text추출에 실패했습니다.";
       appendRagMessageToChat(message, performance.now() - requestStartedAt);
     } finally {
+      const elapsedMs = performance.now() - requestStartedAt;
+      setRagCreateProgress({ visible: true, done: true, elapsedMs, kind: "extract" });
+      ragCreateCloseTimerRef.current = window.setTimeout(() => {
+        setRagCreateProgress((prev) => ({ ...prev, visible: false }));
+        ragCreateCloseTimerRef.current = null;
+      }, 1500);
       setRagBusy(false);
     }
   };
@@ -1404,6 +1458,14 @@ function App() {
       setError("테이블명을 입력해 주세요.");
       return;
     }
+    const temperature = Number(ragTemperature);
+    if (
+      ragModeEnabled &&
+      (!Number.isFinite(temperature) || temperature < 0 || temperature > 0.6)
+    ) {
+      setError("temperature는 0 이상 0.6 이하로 입력해 주세요.");
+      return;
+    }
 
     updateMessages(
       model,
@@ -1418,19 +1480,23 @@ function App() {
 
     try {
       const sessionId = getOrCreateSessionId(model, effectivePreset);
+      const chatBody = {
+        model,
+        message: text,
+        sessionid: sessionId,
+        mode,
+        promptPreset: effectivePreset,
+        systemMessage: effectiveSystemMessage,
+        ragMode: ragModeEnabled,
+        tableName
+      };
+      if (ragModeEnabled) {
+        chatBody.temperature = temperature;
+      }
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          message: text,
-          sessionid: sessionId,
-          mode,
-          promptPreset: effectivePreset,
-          systemMessage: effectiveSystemMessage,
-          ragMode: ragModeEnabled,
-          tableName
-        })
+        body: JSON.stringify(chatBody)
       });
 
       if (!response.ok) {
@@ -1509,7 +1575,30 @@ function App() {
         ${ragModeEnabled
           ? html`
               <div className="rag-panel">
-                <label htmlFor="rag-file-input">문서 업로드</label>
+                <label htmlFor="rag-temperature">Temperature[0~0.6]</label>
+                <input
+                  id="rag-temperature"
+                  type="number"
+                  className="rag-text-input"
+                  min="0"
+                  max="0.6"
+                  step="0.1"
+                  value=${ragTemperature}
+                  onChange=${(e) => {
+                    const next = e.target.value;
+                    if (next === "") {
+                      setRagTemperature(next);
+                      return;
+                    }
+                    const num = Number(next);
+                    if (!Number.isFinite(num)) {
+                      return;
+                    }
+                    setRagTemperature(Math.min(0.6, Math.max(0, num)));
+                  }}
+                  disabled=${loading}
+                />
+                <span className="rag-section-label">문서 업로드</span>
                 <div className="rag-file-picker">
                   <input
                     id="rag-file-input"
@@ -1548,7 +1637,7 @@ function App() {
                         `
                       )}
                     </ul>`
-                  : html`<p className="rag-file-hint">Text / PDF / DOC / Image · 최대 ${RAG_MAX_FILES}개</p>`}
+                  : html`<p className="rag-file-hint">PDF / DOC / Image · 최대 ${RAG_MAX_FILES}개</p>`}
                 <div className="rag-panel-lower">
                   <label htmlFor="rag-table-name">테이블명</label>
                   <div className="rag-table-name-field">
@@ -1586,7 +1675,7 @@ function App() {
                       onClick=${createRagVector}
                       disabled=${!hasRagFiles || !ragTableName.trim() || loading || ragBusy}
                     >
-                      ${ragBusy ? "처리 중..." : "벡터DB 생성"}
+                      ${ragBusy ? "처리 중..." : "벡터DB생성"}
                     </button>
                     <button
                       type="button"
@@ -1594,7 +1683,7 @@ function App() {
                       onClick=${deleteRagVector}
                       disabled=${!ragTableName.trim() || loading || ragBusy}
                     >
-                      벡터DB 삭제
+                      벡터DB삭제
                     </button>
                     <button
                       type="button"
@@ -1619,10 +1708,11 @@ function App() {
           <div className="app-brand">
             <img
               className="app-brand-logo"
-              src="/llm-workbench-logo.png?v=20260723-2"
-              alt="LLM Workbench"
-              width="220"
-              height="36"
+              src="/llm-workbench-logo.png?v=20260805-9"
+              alt="LLM Workbench with n8n"
+              width="200"
+              height="30"
+              draggable="false"
             />
           </div>
           <h2>${chatTitle}</h2>
@@ -1742,11 +1832,21 @@ function App() {
           html`
             <div className="rag-progress-overlay" role="alertdialog" aria-modal="true" aria-live="assertive">
               <div className="rag-progress-modal">
-                <h3>Vector DB ${ragCreateProgress.done ? "Complete" : "Creating"}</h3>
+                <h3>
+                  ${ragCreateProgress.kind === "extract"
+                    ? ragCreateProgress.done
+                      ? "Text Extraction Complete"
+                      : "Text Extraction"
+                    : `Vector DB ${ragCreateProgress.done ? "Complete" : "Creating"}`}
+                </h3>
                 <p className="rag-progress-message">
-                  ${ragCreateProgress.done
-                    ? "Vector DB create request has finished."
-                    : "Uploading documents and creating the vector DB."}
+                  ${ragCreateProgress.kind === "extract"
+                    ? ragCreateProgress.done
+                      ? "Text extraction request has finished."
+                      : "Requesting text extraction via VLM..."
+                    : ragCreateProgress.done
+                      ? "Vector DB create request has finished."
+                      : "Uploading documents and creating the vector DB."}
                 </p>
                 <div className="rag-progress-bar" aria-hidden="true">
                   <div className=${`rag-progress-bar-fill ${ragCreateProgress.done ? "is-done" : ""}`}></div>

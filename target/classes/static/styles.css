@@ -84,8 +84,8 @@ body {
 
 .left-panel-title-block {
   box-sizing: border-box;
-  /* Align with chat-area top: right-panel padding-top(8) + chat-header(36) + margin(4) + gap(6) */
-  height: 54px;
+  /* Align with chat-area top: right-panel padding-top(8) + chat-header(32) + margin(4) + gap(6) */
+  height: 50px;
   margin: -20px 0 16px;
   padding: 0;
   display: flex;
@@ -223,7 +223,8 @@ body {
   font-size: 13px;
 }
 
-.rag-panel label {
+.rag-panel label,
+.rag-panel .rag-section-label {
   display: block;
   margin: 8px 0 4px;
   font-family: inherit;
@@ -232,7 +233,8 @@ body {
   color: #cbd5e1;
 }
 
-.rag-panel label:first-child {
+.rag-panel label:first-child,
+.rag-panel .rag-section-label:first-child {
   margin-top: 0;
 }
 
@@ -295,6 +297,33 @@ body {
   font: inherit;
   font-weight: 600;
   font-size: 13px;
+}
+
+#rag-temperature {
+  color-scheme: dark;
+  accent-color: #e5e7eb;
+}
+
+#rag-temperature::-webkit-inner-spin-button,
+#rag-temperature::-webkit-outer-spin-button {
+  margin: 0;
+  opacity: 0;
+  background: #0b0b0b;
+  border-left: 1px solid #374151;
+  color: #e5e7eb;
+  transition: opacity 0.15s ease;
+}
+
+#rag-temperature:hover::-webkit-inner-spin-button,
+#rag-temperature:hover::-webkit-outer-spin-button,
+#rag-temperature:focus::-webkit-inner-spin-button,
+#rag-temperature:focus::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+#rag-temperature:hover::-webkit-inner-spin-button,
+#rag-temperature:focus::-webkit-inner-spin-button {
+  background: #1f2937;
 }
 
 .rag-table-name-field {
@@ -666,7 +695,7 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 32px;
   margin: 0 0 4px;
 }
 
@@ -675,17 +704,24 @@ body {
   z-index: 1;
   display: flex;
   align-items: center;
-  flex-shrink: 0;
-  max-width: 42%;
+  flex: 0 0 auto;
+  width: 200px;
+  max-width: 200px;
+  will-change: transform;
 }
 
 .chat-header .app-brand-logo {
   display: block;
-  height: 32px;
-  width: auto;
-  max-width: 100%;
+  width: 200px;
+  height: 30px;
+  max-width: 200px;
+  max-height: 30px;
   object-fit: contain;
   object-position: left center;
+  flex-shrink: 0;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 .chat-header h2 {
